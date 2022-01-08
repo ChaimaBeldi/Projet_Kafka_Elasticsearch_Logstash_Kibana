@@ -4,19 +4,18 @@ import urllib.request
 from kafka import KafkaProducer
 import http.client
 
-conn = http.client.HTTPSConnection("covid-193.p.rapidapi.com")
+###### API_Key ####
 
-headers = {
-    'x-rapidapi-host': "covid-193.p.rapidapi.com",
-    'x-rapidapi-key': "69f49cf31fmshe575bfd771cbc5bp132c3bjsne3a3c4895a6b"
-    }
-conn.request("GET", "/statistics", headers=headers)
-res = conn.getresponse()
+API_KEY = "0aa543c94df64f70a7ada991bf2a74bb" # FIXME Set your own API key here
+url = "https://api.covidactnow.org/v2/states.json?apiKey={}".format(API_KEY)
 #create kafka producer
+
 producer = KafkaProducer(bootstrap_servers="localhost:9092")
 while True:
-    stat = res.read().decode()
-    print(stat)
-    producer.send("covid-19", stat.encode())
-    print("{} Produced {} stat records".format(time.time(), len(stat)))		
-    time.sleep(2)	
+    response = urllib.request.urlopen(url)
+    states = json.loads(response.read().decode())
+    for state in states:
+        #print(state)
+        producer.send("corona-19", json.dumps(state).encode())
+    print("{} Produced {} state records".format(time.time(), len(states)))
+    time.sleep(1)
